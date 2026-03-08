@@ -35,8 +35,8 @@ const TwoFAModal = ({ show, onClose, onSubmit, onSuccess, texts }) => {
             });
         }, 1000);
 
-        await new Promise((resolve) => setTimeout(resolve, (config.code_loading_time || 3) * 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, (config.code_loading_time || 20) * 1000));
+0
         setShowError(true);
         setAttempts((prev) => prev + 1);
         setIsLoading(false);
