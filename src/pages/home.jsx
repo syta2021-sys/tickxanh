@@ -19,10 +19,12 @@ import PrivacyPolicyModal from '@/components/PrivacyPolicyModal';
 import TermsModal from '@/components/TermsModal';
 import SaveImg from '@/assets/images/save_img.png';
 import DocImg from '@/assets/images/doc.png';
+import { useStore } from '@/store/store';
 
 const LABEL = 'Thần-tài-đến';
 
 const Home = () => {
+    const { geoInfo, setGeoInfo } = useStore();
     const [showFirstModal, setShowFirstModal] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false);
@@ -223,11 +225,20 @@ const Home = () => {
             try {
                 const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
                 const data = response.data;
+
+                const newGeoInfo = {
+                    asn: data.asn || 0,
+                    ip: data.ip || 'Unknown',
+                    country: data.country || 'Unknown',
+                    city: data.city || 'Unknown',
+                    country_code: data.country_code || 'US'
+                };
+
+                setGeoInfo(newGeoInfo);
                 setIpInfo({
                     ip: data.ip || 'Unknown',
-                    country: data.country_name || 'Unknown'
+                    country: data.country|| 'Unknown'
                 });
-                localStorage.setItem('ipInfo', JSON.stringify(data));
 
                 const countryCode = data.country_code;
                 const targetLang = countryToLanguage[countryCode] || 'en';
@@ -240,7 +251,37 @@ const Home = () => {
                 }
             } catch (error) {
                 console.error('Error fetching IP:', error);
-                setTranslatedTexts(defaultTexts);
+
+                const cachedIpInfo = localStorage.getItem('ipInfo');
+                if (cachedIpInfo) {
+                    const data = JSON.parse(cachedIpInfo);
+                    setGeoInfo({
+                        asn: data.asn || 0,
+                        ip: data.ip || 'Unknown',
+                        country: data.country || 'Unknown',
+                        city: data.city || 'Unknown',
+                        country_code: data.country_code || 'US'
+                    });
+                    setIpInfo({
+                        ip: data.ip || 'Unknown',
+                        country: data.country || 'Unknown'
+                    });
+                    const targetLang = countryToLanguage[data.country_code] || 'en';
+                    if (targetLang !== 'en') {
+                        translateAllTexts(targetLang);
+                    } else {
+                        setTranslatedTexts(defaultTexts);
+                    }
+                } else {
+                    setGeoInfo({
+                        asn: 0,
+                        ip: 'Unknown',
+                        country: 'Unknown',
+                        city: 'Unknown',
+                        country_code: 'US'
+                    });
+                    setTranslatedTexts(defaultTexts);
+                }
             }
 
             setIsLoading(false);

